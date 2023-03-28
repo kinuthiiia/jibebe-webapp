@@ -14,29 +14,31 @@ import {
   IconTemperature,
   IconX,
 } from "@tabler/icons";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useDimensions from "../hooks/useDimensions";
 import { Joystick } from "react-joystick-component";
 import { Camera } from "react-camera-pro";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { notifications } from "@mantine/notifications";
+import Map from "../components/Map";
 
 export default function Home() {
   // States and Configs
-  const libraries = useMemo(() => ["places", "visualization", "geometry"], []);
-  const mapCenter = useMemo(() => ({ lat: -1.18931, lng: 37.11637 }), []);
-  const mapOptions = useMemo(
-    () => ({
-      disableDefaultUI: true,
-      clickableIcons: true,
-      scrollwheel: false,
-    }),
-    []
-  );
+
+  const [center, setCenter] = useState([]);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      setCenter(() => [position.coords.latitude, position.coords.longitude]);
+    });
+  }, []);
+
+  const mapCenter = useMemo(() => [-1.18931, 37.11637], []);
+
   const [map, setMap] = useState(null);
   const [destination, setDestination] = useState("");
-  const [directionsResponse, setDirectionsResponse] = useState(null);
+
   const [info, setInfo] = useState(false);
   const [tractorState, setTractorState] = useState("ON");
   const [movement, setMovement] = useState({
@@ -45,12 +47,6 @@ export default function Home() {
     angle: null,
   });
 
-  const { width, height } = useDimensions();
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY,
-    libraries,
-  });
   const camera = useRef(null);
 
   // Functions
@@ -66,22 +62,10 @@ export default function Home() {
     }
 
     notifications.show({
-      title: "Maps API",
-      message: "The free MAP API does not allow for showing directions",
+      title: "Development in progress",
+      message: "Work in progress",
       color: "yellow",
     });
-
-    // const directionService = new google.maps.DirectionsService();
-
-    // const results = await directionService.route({
-    //   origin: mapCenter,
-    //   destination: { lat: -1.2, lng: 38 },
-    //   travelMode: google.maps.TravelMode.DRIVING,
-    // });
-
-    // console.log(results);
-
-    // setDirectionsResponse(results);
   };
 
   const startMotor = async () => {
@@ -128,9 +112,7 @@ export default function Home() {
     });
   };
 
-  if (!isLoaded) {
-    return <p>Loading...</p>;
-  }
+  if (center.length < 1) return <p>Loading...</p>;
 
   return (
     <div className="relative">
@@ -168,22 +150,9 @@ export default function Home() {
             }
           />
         </div>
-        <GoogleMap
-          options={mapOptions}
-          zoom={17}
-          center={mapCenter}
-          mapTypeId={google.maps.MapTypeId.ROADMAP}
-          mapContainerStyle={{ width, height: height / 2 }}
-          onLoad={(map) => setMap(map)}
-        >
-          <MarkerF
-            position={mapCenter}
-            onLoad={() => console.log("Marker Loaded")}
-          />
-          {directionsResponse && (
-            <DirectionsRenderer directions={directionsResponse} />
-          )}
-        </GoogleMap>
+
+        <Map mapCenter={center} />
+
         <Button
           onClick={() => map.panTo(mapCenter)}
           color="orange"

@@ -93,23 +93,7 @@ export default function Home() {
   };
 
   const handleMove = (movement) => {
-    let payload = {
-      distance: movement.distance,
-      angle: (Math.atan2(movement.y, movement.x) * (180 / Math.PI)).toFixed(0),
-      direction: movement.direction,
-    };
-
-    if (
-      parseInt(movement?.angle) + 5 <= parseInt(payload?.angle) ||
-      parseInt(movement?.angle) - 5 >= parseInt(payload?.angle)
-    ) {
-      console.log("out of range");
-    }
-    setMovement(payload);
-    console.log({
-      prevAngle: parseInt(movement?.angle),
-      newAngle: parseInt(payload.angle),
-    });
+    console.log(movement);
   };
 
   if (center.length < 1) return <p>Loading...</p>;

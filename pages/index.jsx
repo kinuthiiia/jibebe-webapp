@@ -93,7 +93,13 @@ export default function Home() {
   };
 
   const handleMove = (movement) => {
-    console.log(movement);
+    let payload = {
+      distance: movement.distance,
+      angle: (Math.atan2(movement.y, movement.x) * (180 / Math.PI)).toFixed(0),
+      direction: movement.direction,
+    };
+
+    console.log(payload);
   };
 
   const handleStop = (e) => {

@@ -96,6 +96,10 @@ export default function Home() {
     console.log(movement);
   };
 
+  const handleStop = (e) => {
+    console.log(e);
+  };
+
   if (center.length < 1) return <p>Loading...</p>;
 
   return (

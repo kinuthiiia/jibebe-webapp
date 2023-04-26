@@ -2,7 +2,7 @@ import { Button } from "@mantine/core";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
-const DynamicMap = dynamic(() => import("./DynamicMap"), {
+const DynamicMap = dynamic(() => import("./DMap"), {
   ssr: false,
 });
 

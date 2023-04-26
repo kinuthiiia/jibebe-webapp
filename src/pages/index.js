@@ -4,16 +4,10 @@ import {
   IconBatteryCharging,
   IconChartInfographic,
   IconClock,
-  IconFocus2,
-  IconLocation,
   IconTemperature,
-  IconX,
 } from "@tabler/icons";
-import { useEffect, useMemo, useRef, useState } from "react";
-import useDimensions from "@/hooks/useDimensions.js";
+import { useEffect, useState } from "react";
 
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
 import { notifications } from "@mantine/notifications";
 import Map from "@/components/Map";
 
@@ -38,7 +32,6 @@ const MapView = () => {
         className="flex bg-white p-3 w-full justify-between items-center space-x-6 absolute top-0"
       >
         <img src="/jibebe_logo.PNG" className="h-[48px]" />
-        <Select data={["My farm", "Jeremys farm"]} />
       </div>
 
       {/* Stats */}

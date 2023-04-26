@@ -22,6 +22,8 @@ export default function DynamicMap({ mapCenter, getMenuState }) {
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [start, setStart] = useState(null);
+
   useEffect(() => {
     if (map) {
       console.log("Map present");
@@ -74,33 +76,141 @@ export default function DynamicMap({ mapCenter, getMenuState }) {
 
         // Check if the track intersects with the polygon
         if (
-          turf.lineOverlap(turfLineString, turfPolygon)?.features.length == 0
+          turf.lineIntersect(turfLineString, turfPolygon).features.length == 0
         ) {
           // Convert the turf lineString to an array of coordinates
           const trackCoordinates = turfLineString.geometry.coordinates;
 
-          const [_p1, _p2] = trackCoordinates;
-          const [_lat1, _lng1] = _p1;
-          const [_lat2, _lng2] = _p2;
+          setTracks((prevTracks) => [...prevTracks, trackCoordinates]);
+        }
+      }
+    }
+  };
 
-          const differential = 0.0001;
+  const handleGenerateTracks2 = (polygonCoordinates) => {
+    const trackWidth = 0.000075; // 1.5 meters in degrees
 
-          console.log(
-            turf.difference(
-              turf.polygon([
-                [
-                  [_lat1, _lng1],
-                  [_lat2, _lng2],
-                  [_lat1, _lng2 + differential],
-                  [_lat2, _lng2 + differential],
-                  [_lat1, _lng1],
-                ],
-              ]),
-              turf.polygon([[...polygonCoordinates, polygonCoordinates[0]]])
-            )
+    // Create a turf polygon feature from the input polygon coordinates
+    const turfPolygon = turf.polygon([
+      [...polygonCoordinates, polygonCoordinates[0]],
+    ]);
+
+    // Calculate the bounding box of the polygon
+    const bbox = turf.bbox(turfPolygon);
+
+    const [minX, minY, maxX, maxY] = bbox;
+
+    for (let i = minX; i <= maxX; i += trackWidth) {
+      for (let j = minY; j <= maxY; j += trackWidth) {
+        // Create a turf lineString feature for the track
+        const turfLineString = turf.lineString([
+          [i, j],
+          [i + trackWidth, j],
+        ]);
+
+        // Check if the track intersects with the polygon
+
+        console.log(turf.lineIntersect(turfLineString, turfPolygon)?.features);
+
+        if (
+          turf.lineIntersect(turfLineString, turfPolygon)?.features.length > 0
+        ) {
+          // Create start and end point varibles
+          const startPoint = turf.point(turfLineString.geometry.coordinates[0]);
+          const endPoint = turf.point(turfLineString.geometry.coordinates[1]);
+
+          // If there is just one intersection
+          if (
+            turf.lineIntersect(turfLineString, turfPolygon)?.features.length ==
+            1
+          ) {
+            // First slice
+            const slice1 = turf.lineSlice(
+              startPoint.geometry.coordinates,
+              turf.lineIntersect(turfLineString, turfPolygon).features[0]
+                .geometry.coordinates,
+
+              turfLineString
+            );
+
+            // Second slice
+            const slice2 = turf.lineSlice(
+              turf.lineIntersect(turfLineString, turfPolygon).features[0]
+                .geometry.coordinates,
+              endPoint.geometry.coordinates,
+              turfLineString
+            );
+
+            // First slice is inside polyon
+            if (
+              turf.booleanPointInPolygon(
+                slice1.geometry.coordinates[0],
+                turfPolygon
+              )
+            ) {
+              const sliceLineString = turf.lineString([
+                ...slice2.geometry.coordinates,
+              ]);
+
+              const trackCoordinates = sliceLineString.geometry.coordinates;
+              setTracks((prevTracks) => [...prevTracks, trackCoordinates]);
+            }
+            // Second slice is inside the polygon
+            else {
+              const sliceLineString = turf.lineString([
+                ...slice1.geometry.coordinates,
+              ]);
+
+              const trackCoordinates = sliceLineString.geometry.coordinates;
+              setTracks((prevTracks) => [...prevTracks, trackCoordinates]);
+            }
+          }
+
+          // If there are 2 intersections
+          else if (
+            turf.lineIntersect(turfLineString, turfPolygon)?.features.length ==
+            2
+          ) {
+            const slice = turf.lineSlice(
+              turf.lineIntersect(turfLineString, turfPolygon).features[0]
+                .geometry.coordinates,
+              turf.lineIntersect(turfLineString, turfPolygon).features[1]
+                .geometry.coordinates,
+              turfLineString
+            );
+
+            const sliceLineString = turf.lineString([
+              ...slice.geometry.coordinates,
+            ]);
+
+            const trackCoordinates = sliceLineString.geometry.coordinates;
+            setTracks((prevTracks) => [...prevTracks, trackCoordinates]);
+          }
+
+          // Slice the LineString from the start to the intersecting point
+          const startSlice = turf.lineSlice(
+            startPoint.geometry.coordinates,
+            turf.lineIntersect(turfLineString, turfPolygon).features[0].geometry
+              .coordinates,
+            turfLineString
           );
 
-          // Add the track coordinates to the tracks array
+          // Create a new LineString with the remaining part of the original LineString from the intersecting point to the end
+          const endSlice = turf.lineSlice(
+            turf.lineIntersect(turfLineString, turfPolygon).features[0].geometry
+              .coordinates,
+            endPoint.geometry.coordinates,
+            turfLineString
+          );
+
+          const remainingLineString = turf.lineString([
+            ...startSlice.geometry.coordinates,
+            ...endSlice.geometry.coordinates,
+          ]);
+
+          // Convert the turf lineString to an array of coordinates
+          const trackCoordinates = remainingLineString.geometry.coordinates;
+
           setTracks((prevTracks) => [...prevTracks, trackCoordinates]);
         }
       }
@@ -109,6 +219,16 @@ export default function DynamicMap({ mapCenter, getMenuState }) {
 
   let marker = new Leaflet.Icon({
     iconUrl: "/tractor.png",
+    iconSize: [45, 35],
+    iconAnchor: [32, 64],
+    popupAnchor: null,
+    shadowUrl: null,
+    shadowSize: null,
+    shadowAnchor: null,
+  });
+
+  let marker2 = new Leaflet.Icon({
+    iconUrl: "/favicon.ico",
     iconSize: [45, 35],
     iconAnchor: [32, 64],
     popupAnchor: null,
@@ -135,6 +255,13 @@ export default function DynamicMap({ mapCenter, getMenuState }) {
             A pretty CSS3 popup. <br /> Easily customizable.
           </Popup>
         </Marker>
+        {start && (
+          <Marker position={start} icon={marker2}>
+            <Popup>
+              A pretty CSS3 popup. <br /> Easily customizable.
+            </Popup>
+          </Marker>
+        )}
         {polygonCoords.length > 0 && (
           <Polygon
             pathOptions={{ color: "purple" }}
@@ -160,7 +287,7 @@ export default function DynamicMap({ mapCenter, getMenuState }) {
             &larr; Back
           </Button>
           <Button
-            onClick={() => handleGenerateTracks(polygonCoords)}
+            onClick={() => handleGenerateTracks2(polygonCoords)}
             color="green"
             loading={loading}
           >

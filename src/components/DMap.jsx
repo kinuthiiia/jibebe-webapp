@@ -145,7 +145,8 @@ export default function DMap({ mapCenter }) {
     <span>
       <MapContainer
         center={mapCenter}
-        zoom={17}
+        zoom={20}
+        maxZoom={24}
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%", zIndex: 79 }}
         whenCreated={(map) => setMap(map)}

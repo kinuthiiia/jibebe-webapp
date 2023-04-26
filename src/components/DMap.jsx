@@ -203,13 +203,19 @@ export default function DMap({ mapCenter }) {
 
       {menuState && (
         <div
-          className=" flex gap-3 absolute bottom-0 w-full p-4 bg-white"
+          className=" flex gap-3 absolute bottom-0 lg:bottom-4 lg:w-2/5 lg:left-[50%] lg:translate-x-[-50%] lg:rounded-lg w-full p-4 bg-white"
           style={{ zIndex: 99 }}
         >
-          <Button onClick={startNavigating} color="green" fullWidth>
+          <Button onClick={startNavigating} color="green" fullWidth uppercase>
             Start ploughing
           </Button>
-          <Button color="orange" variant="outline" onClick={clearMap} fullWidth>
+          <Button
+            color="orange"
+            variant="outline"
+            onClick={clearMap}
+            fullWidth
+            uppercase
+          >
             {" "}
             Clear Map
           </Button>

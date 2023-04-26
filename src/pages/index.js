@@ -29,7 +29,7 @@ const MapView = () => {
       {/* Header */}
       <div
         style={{ zIndex: 99 }}
-        className="flex bg-white p-3 w-full justify-between items-center space-x-6 absolute top-0"
+        className="flex flex-row-reverse p-3 w-full justify-between items-center space-x-6 absolute top-0"
       >
         <img src="/jibebe_logo.PNG" className="h-[48px]" />
       </div>
